@@ -9,6 +9,13 @@ SER_BUADRATE = 9600                                         # Communicate baud r
 
 SVR_PORT = 5000                                             # SERVER Listening PORT
 
+def LED_Init():
+    for _ in range(0,3):
+        ser.write(bytes('L255255255'))                      # Send Arduino
+        time.sleep(0.05)
+        ser.write(bytes('L000000000'))                      # Send Arduino
+        time.sleep(0.05)
+
 print("Connecting Arudino...")
 try:
     ser = serial.Serial(SER_PORT, SER_BUADRATE, timeout = 1)# Serial(Arduino) Open
@@ -17,10 +24,10 @@ except serial.SerialException as e:
     print(e)
     sys.exit()
 
-
 time.sleep(1)                                               # delay
 print("Connected Arduino.")
 print("============")
+LED_Init()
 
 app = Flask(__name__)                                       # Flask define
 
@@ -44,7 +51,7 @@ def setLed():
         print('Port communicate failed')
         print(e)
         sys.exit()
-        
+
     return 'LED Setted R:{0}, G:{1}, B:{2}'.format(r,g,b)
 
 # Check Application connect URL
