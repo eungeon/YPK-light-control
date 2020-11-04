@@ -1,5 +1,4 @@
-import asyncio
-import websockets
+from socket import *
 
 import json                                                 # import for parsing data
 import serial                                               # import for communicating arduino 
@@ -31,21 +30,23 @@ print("Connected Arduino.")
 print("============")
 LED_Init()
 
-async def accept(websocket, path):
-    while True:
-        
-        data = await websocket.recv();
-        print("receive : " + data);
-        
-        await websocket.send("echo : " + data);
 
+serverCocket = socket(AF_INET, SOCK_STREAM)
+serverCocket.bind((host, port))
+serverCocket.listen(1)
+print('Wating...')
 
-start_server = websockets.serve(accept, "localhost", 3000);
+connSocket,addr = serverCocket.accept()
 
-asyncio.get_event_loop().run_until_complete(start_server);
-asyncio.get_event_loop().run_forever();
+print("Connection from " + str(addr))
 
+data = connSocket.recv(9)
+print("Received data : " + data.decode("utf-8"))
 
+connSocket.send("server msg".encode("utf-8"))
+print("sent")
+
+serverCocket.close()
 
 # app = Flask(__name__)                                       # Flask define
 
