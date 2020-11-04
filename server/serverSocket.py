@@ -1,3 +1,4 @@
+#from socket import *
 from socket import *
 from select import *
 
@@ -10,13 +11,13 @@ SER_PORT = '/dev/ttyACM0'                                   # Arduino PORT
 SER_BUADRATE = 9600                                         # Communicate baud rate
 
 SVR_HOST = '0.0.0.0'
-SVR_PORT = 5000                                             # SERVER Listening PORT
+SVR_PORT = 3000                                             # SERVER Listening PORT
 
 def LED_Init():
     for _ in range(0,3):
-        ser.write(bytes('L255255255'))                      # Send Arduino
+        ser.write(bytes('L255255255'.encode()))                      # Send Arduino
         time.sleep(0.05)
-        ser.write(bytes('L000000000'))                      # Send Arduino
+        ser.write(bytes('L000000000'.encode()))                      # Send Arduino
         time.sleep(0.05)
 
 print("Connecting Arudino...")
@@ -34,9 +35,9 @@ LED_Init()
 
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
-serverSocket.bind((host, port))
+serverSocket.bind((SVR_HOST, SVR_PORT))
 serverSocket.listen(1)     
-print('Listening on {0} PORT.'.format(port))
+print('Listening on {0} PORT.'.format(SVR_PORT))
 
 socketList = [serverSocket]
 
@@ -72,15 +73,33 @@ while True:
     except ConnectionResetError:
         socketList.remove(sock)
         print('client exited')
+        try:
+            ser.write(bytes('L000000000'.encode()))                               # Send Arduino
+        except serial.SerialException as e:
+            print('Port communicate failed')
+            print(e)
+            sys.exit()
 
     except ConnectionAbortedError:
         socketList.remove(sock)
         print('client not found')
+        try:
+            ser.write(bytes('L000000000'.encode()))                               # Send Arduino
+        except serial.SerialException as e:
+            print('Port communicate failed')
+            print(e)
+            sys.exit()
 
     except KeyboardInterrupt:
         #socketList.remove(sock)
         serverSocket.close()
         print('Ctrl+C Pressed. Program end.')
+        try:
+            ser.write(bytes('L000000000'.encode()))                               # Send Arduino
+        except serial.SerialException as e:
+            print('Port communicate failed')
+            print(e)
+            sys.exit()
         sys.exit()
 
 
