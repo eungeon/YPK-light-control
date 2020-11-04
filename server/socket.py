@@ -1,4 +1,5 @@
 from socket import *
+from select import *
 
 import json                                                 # import for parsing data
 import serial                                               # import for communicating arduino 
@@ -8,6 +9,7 @@ import sys                                                  # import for shutdow
 SER_PORT = '/dev/ttyACM0'                                   # Arduino PORT
 SER_BUADRATE = 9600                                         # Communicate baud rate
 
+SVR_HOST = '0.0.0.0'
 SVR_PORT = 5000                                             # SERVER Listening PORT
 
 def LED_Init():
@@ -31,22 +33,56 @@ print("============")
 LED_Init()
 
 
-serverCocket = socket(AF_INET, SOCK_STREAM)
-serverCocket.bind((host, port))
-serverCocket.listen(1)
-print('Wating...')
+serverSocket = socket(AF_INET, SOCK_STREAM)
+serverSocket.bind((host, port))
+serverSocket.listen(1)     
+print('Listening on {0} PORT.'.format(port))
 
-connSocket,addr = serverCocket.accept()
+socketList = [serverSocket]
 
-print("Connection from " + str(addr))
+while True:
+    try:
+        r_socket, w_socket, e_socket = select(socketList, [], [], 1)
+        
+        for sock in r_socket :
+            if sock == serverSocket :
+                clientSocket, clientAddress = serverSocket.accept()
+                socketList.append(clientSocket)
+                print("Connection from " + str(clientAddress))
 
-data = connSocket.recv(9)
-print("Received data : " + data.decode("utf-8"))
+            else :
+                data = sock.recv(30)
+                print("Received data : " + data.decode("utf-8"))
 
-connSocket.send("server msg".encode("utf-8"))
-print("sent")
+                try:
+                    ser.write(bytes(data))                               # Send Arduino
+                except serial.SerialException as e:
+                    print('Port communicate failed')
+                    print(e)
+                    sys.exit()
 
-serverCocket.close()
+                sock.send("data".encode("utf-8"))
+                print("sent")
+
+                if data.decode('utf-8') == 'disconn':
+                    socketList.remove(sock)
+                    print('disconnected')
+                    break
+                
+    except ConnectionResetError:
+        socketList.remove(sock)
+        print('client exited')
+
+    except ConnectionAbortedError:
+        socketList.remove(sock)
+        print('client not found')
+
+    except KeyboardInterrupt:
+        #socketList.remove(sock)
+        serverSocket.close()
+        print('Ctrl+C Pressed. Program end.')
+        sys.exit()
+
 
 # app = Flask(__name__)                                       # Flask define
 
