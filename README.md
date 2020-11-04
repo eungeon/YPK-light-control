@@ -15,7 +15,7 @@
 
 <br>
 
----=
+---
 
 ## **프로젝트 요구사항**
 ![요구사항1](https://user-images.githubusercontent.com/41093226/98086132-a3c43b80-1ec1-11eb-9390-fd34a3b3fe07.png)
